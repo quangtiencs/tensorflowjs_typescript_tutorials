@@ -27,14 +27,14 @@ for (let i = 0; i < data.x.size; i++) {
   vegaData.push({ "x": data.x.dataSync()[i], "y": data.y.dataSync()[i] });
 }
 
-function quantileLoss90(yPred: tf.Tensor, yTrue: tf.Tensor) {
+function quantileLoss90(yTrue: tf.Tensor, yPred: tf.Tensor) {
   let error = yTrue.sub(yPred);
-  return tf.maximum(error.mul(0.1), error.mul(-0.9)).mean();
+  let alpha = 0.9;
+  return tf.maximum(error.mul(alpha), error.mul(alpha - 1.0)).mean();
 }
 
 let model = tf.sequential();
 model.add(tf.layers.dense({ inputShape: [1], units: 1 }));
-model.add(tf.layers.dense({ units: 16, activation: "relu" }));
 model.add(tf.layers.dense({ units: 1 }));
 
 model.compile({
@@ -44,7 +44,7 @@ model.compile({
 
 model.summary();
 
-model.fit(data.x, data.y, { epochs: 100 }).then((history) => {
+model.fit(data.x, data.y, { epochs: 100, batchSize: 64 }).then((history) => {
   document.querySelector("#status")!!.innerHTML = "Completed :D";
   document.querySelector("#status")!!.setAttribute("style", "color: green");
 
